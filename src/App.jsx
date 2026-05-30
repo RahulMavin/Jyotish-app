@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import './App.css'
 import BirthForm from './components/BirthForm'
+import ReadingReport from './components/ReadingReport'
 
 function Header() {
   return (
@@ -149,31 +150,35 @@ Generate the full personalized report now.`
         )}
 
         {screen === 'loading' && (
-          <div className="text-center py-20">
-            <div className="text-4xl mb-4 animate-spin inline-block">☀</div>
-            <p className="font-serif text-2xl text-gray-700 mb-2">
-              Consulting the Cosmos...
-            </p>
-            <p className="text-sm text-gray-400">
-              Reading your cosmic blueprint
-            </p>
-          </div>
-        )}
+  <div className="text-center py-24">
+    <div className="text-5xl mb-6 animate-spin inline-block">
+      ☀
+    </div>
+    <p className="font-serif text-2xl text-gray-700 mb-2">
+      Consulting the Cosmos...
+    </p>
+    <p className="text-sm text-gray-400 mb-6">
+      Preparing your personalized Jyotish reading
+    </p>
+    <div className="flex justify-center gap-1">
+      <span className="w-1.5 h-1.5 bg-yellow-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+      <span className="w-1.5 h-1.5 bg-yellow-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+      <span className="w-1.5 h-1.5 bg-yellow-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+    </div>
+  </div>
+)}
 
         {screen === 'report' && (
-          <div className="text-center py-20">
-            <p className="text-gray-500">Reading received! Day 5 will display it beautifully.</p>
-            <pre className="text-left text-xs text-gray-400 mt-4 whitespace-pre-wrap">
-              {reading.substring(0, 200)}...
-            </pre>
-            <button
-              onClick={() => setScreen('form')}
-              className="mt-6 px-6 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50"
-            >
-              New Reading
-            </button>
-          </div>
-        )}
+  <ReadingReport
+    reading={reading}
+    name={formData?.name}
+    onNewReading={() => {
+      setScreen('form')
+      setReading('')
+      setFormData(null)
+    }}
+  />
+)}
 
       </main>
       <Footer />
