@@ -94,7 +94,7 @@ function BirthForm({ onSubmit }) {
           </label>
           <input
             type="text"
-            placeholder="e.g. Arjun Sharma"
+            placeholder="e.g. Rahul Iyengar"
             value={formData.name}
             onChange={(e) => handleChange('name', e.target.value)}
             className={inputClass}
