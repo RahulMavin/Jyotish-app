@@ -94,7 +94,7 @@ CLOSE WITH: End the entire reading with a warm 3-sentence paragraph addressing $
 
 DO NOT ADD ANY INTRODUCTION OR PREAMBLE BEFORE SECTION I.`
 
-  const claudeKey = process.env.CLAUDE_KEY
+  const claudeKey = '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'
   const url = 'https://api.anthropic.com/v1/messages'
 
   try {

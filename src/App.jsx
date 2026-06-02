@@ -1,3 +1,4 @@
+import { supabase } from './lib/supabase'
 import { useState } from 'react'
 import './App.css'
 import BirthForm from './components/BirthForm'
@@ -43,33 +44,67 @@ function App() {
   const [reading, setReading] = useState('')
 
   async function handleFormSubmit(data) {
-    setFormData(data)
-    setScreen('loading')
+  setFormData(data)
+  setScreen('loading')
 
-    try {
-      const response = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ formData: data })
-      })
+  try {
+    // Save user to Supabase
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .upsert([
+        {
+          name: data.name,
+          email: data.email,
+          phone: data.phone,
+          dob: data.dob,
+          tob: data.tob,
+          pob: data.pob,
+          gender: data.gender
+        }
+      ], { onConflict: 'email' })
+      .select()
 
-      const result = await response.json()
+    if (userError) throw new Error(userError.message)
 
-      if (result.error) {
-        setScreen('form')
-        alert(result.error)
-        return
-      }
+    const userId = userData[0].id
 
-      setReading(result.reading)
-      setScreen('report')
+    // Call the API to generate reading
+    const response = await fetch('/api/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ formData: data })
+    })
 
-    } catch (error) {
-      console.error('Error:', error.message)
+    const result = await response.json()
+
+    if (result.error) {
       setScreen('form')
-      alert('Something went wrong: ' + error.message)
+      alert(result.error)
+      return
     }
+
+    // Save reading to Supabase
+    await supabase
+      .from('readings')
+      .insert([
+        {
+          user_id: userId,
+          focus_area: data.focusArea,
+          marital_status: data.maritalStatus,
+          question: data.question,
+          reading_text: result.reading
+        }
+      ])
+
+    setReading(result.reading)
+    setScreen('report')
+
+  } catch (error) {
+    console.error('Error:', error.message)
+    setScreen('form')
+    alert('Something went wrong: ' + error.message)
   }
+}
 
   return (
     <div className="min-h-screen">

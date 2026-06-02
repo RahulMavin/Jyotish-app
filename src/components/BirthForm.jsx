@@ -38,6 +38,8 @@ function BirthForm({ onSubmit }) {
 
   const [formData, setFormData] = useState({
     name: '',
+    email: '',
+    phone: '',
     dob: '',
     tob: '',
     pob: '',
@@ -60,17 +62,17 @@ function BirthForm({ onSubmit }) {
   }
 
   function handleSubmit() {
-    if (!formData.name || !formData.dob || !formData.tob || !formData.pob) {
-      setError('Please fill in Name, Date of Birth, Time of Birth, and Place of Birth.')
-      return
-    }
-    if (!formData.gender) {
-      setError('Please select your gender for an accurate reading.')
-      return
-    }
-    setError('')
-    onSubmit(formData)
+  if (!formData.name || !formData.email || !formData.phone || !formData.dob || !formData.tob || !formData.pob) {
+    setError('Please fill in all required fields.')
+    return
   }
+  if (!formData.gender) {
+    setError('Please select your gender for an accurate reading.')
+    return
+  }
+  setError('')
+  onSubmit(formData)
+}
 
   const inputClass = "w-full bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-sm text-white placeholder-white/30 focus:outline-none focus:border-yellow-400/60"
   const labelClass = "block text-sm text-white/70 mb-1"
@@ -100,6 +102,33 @@ function BirthForm({ onSubmit }) {
             className={inputClass}
           />
         </div>
+         {/* Email */}
+          <div className="mb-3">
+            <label className={labelClass}>
+              Email <span className="text-red-400">*</span>
+            </label>
+            <input
+              type="email"
+              placeholder="e.g. your.email@gmail.com"
+              value={formData.email}
+              onChange={(e) => handleChange('email', e.target.value)}
+              className={inputClass}
+            />
+          </div>
+
+            {/* Phone */}
+            <div className="mb-3">
+              <label className={labelClass}>
+                Phone <span className="text-red-400">*</span>
+              </label>
+              <input
+                type="tel"
+                placeholder="e.g. 9876543210"
+                value={formData.phone}
+                onChange={(e) => handleChange('phone', e.target.value)}
+                className={inputClass}
+              />
+            </div>
 
         {/* DOB and TOB */}
         <div className="grid grid-cols-2 gap-3 mb-3">
