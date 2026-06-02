@@ -44,67 +44,72 @@ function App() {
   const [reading, setReading] = useState('')
 
   async function handleFormSubmit(data) {
-  setFormData(data)
-  setScreen('loading')
+    setFormData(data)
+    setScreen('loading')
 
-  try {
-    // Save user to Supabase
-    const { data: userData, error: userError } = await supabase
-      .from('users')
-      .upsert([
-        {
-          name: data.name,
-          email: data.email,
-          phone: data.phone,
-          dob: data.dob,
-          tob: data.tob,
-          pob: data.pob,
-          gender: data.gender
-        }
-      ], { onConflict: 'email' })
-      .select()
+    try {
+      // 1. Save or Update user details in Supabase
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .upsert([
+          {
+            name: data.name,
+            email: data.email,
+            phone: data.phone,
+            dob: data.dob,
+            tob: data.tob,
+            pob: data.pob,
+            gender: data.gender
+          }
+        ], { onConflict: 'email' })
+        .select()
 
-    if (userError) throw new Error(userError.message)
+      if (userError) throw new Error(`Supabase User Save Error: ${userError.message}`)
+      if (!userData || userData.length === 0) throw new Error('Failed to retrieve user record back from database.')
 
-    const userId = userData[0].id
+      const userId = userData[0].id
 
-    // Call the API to generate reading
-    const response = await fetch('/api/generate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ formData: data })
-    })
+      // 2. Call local backend endpoint to query Anthropic Claude API
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ formData: data })
+      })
 
-    const result = await response.json()
+      const result = await response.json()
 
-    if (result.error) {
+      if (!response.ok || result.error) {
+        setScreen('form')
+        alert(result.error || 'The astrology engine encountered an error. Check terminal logs.')
+        return
+      }
+
+      // 3. Save the generated reading payload back to Supabase
+      const { error: readingError } = await supabase
+        .from('readings')
+        .insert([
+          {
+            user_id: userId,
+            focus_area: data.focusArea,
+            marital_status: data.maritalStatus,
+            question: data.question,
+            reading_text: result.reading
+          }
+        ])
+
+      if (readingError) {
+        console.error('Database warning: Reading could not log to history:', readingError.message)
+      }
+
+      setReading(result.reading)
+      setScreen('report')
+
+    } catch (error) {
+      console.error('App Execution Error:', error.message)
       setScreen('form')
-      alert(result.error)
-      return
+      alert('System Blockage: ' + error.message)
     }
-
-    // Save reading to Supabase
-    await supabase
-      .from('readings')
-      .insert([
-        {
-          user_id: userId,
-          focus_area: data.focusArea,
-          marital_status: data.maritalStatus,
-          question: data.question,
-          reading_text: result.reading
-        }
-      ])
-
-    setReading(result.reading)
-    setScreen('report')
-
-  } catch (error) {
-    console.error('Error:', error.message)
-    setScreen('form')
-    alert('Something went wrong: ' + error.message)
   }
-}
 
   return (
     <div className="min-h-screen">

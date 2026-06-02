@@ -1,21 +1,35 @@
 export async function POST(request) {
+  // Safe Header Definitions for cross-origin cloud environments
+  const responseHeaders = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS'
+  };
 
-  const body = await request.json()
-  const { formData } = body
+  try {
+    const body = await request.json()
+    const { formData } = body
 
-  const systemPrompt = `You are a world-class Vedic Astrology (Jyotish) expert with 25 years of experience, trained in Brihat Parashara Hora Shastra, Jaimini Sutras, and Phaladeepika. You serve the Indian market where astrology guides major life decisions.
+    if (!formData || !formData.name) {
+      return new Response(
+        JSON.stringify({ error: 'Missing required form data fields.' }),
+        { status: 400, headers: responseHeaders }
+      );
+    }
+
+    const systemPrompt = `You are a world-class Vedic Astrology (Jyotish) expert with 25 years of experience, trained in Brihat Parashara Hora Shastra, Jaimini Sutras, and Phaladeepika. You serve the Indian market where astrology guides major life decisions.
 
 CRITICAL RULES:
 - Write ALL 13 sections completely — never skip or summarize
 - Each section minimum 120 words, specific and actionable
 - Use the person's name throughout
-- Reference exact planetary placements (e.g., "Jupiter in 9th house")
+- Reference exact planetary placements
 - Be warm, like a trusted family astrologer
-- Write in simple English — avoid jargon without explanation
+- Write in simple English
 
-OUTPUT FORMAT — Generate these 13 sections in order with no introduction, no preamble:`
+OUTPUT FORMAT — Generate these 13 sections in order:`;
 
-  const userMessage = `Generate a COMPLETE 13-section Vedic Astrology reading for ${formData.name}.
+    const userMessage = `Generate a COMPLETE 13-section Vedic Astrology reading for ${formData.name}.
 
 BIRTH DETAILS:
 - Date of Birth: ${formData.dob}
@@ -39,107 +53,114 @@ ASTROLOGICAL DETAILS:
 GENERATE EXACTLY THESE 13 SECTIONS:
 
 ## 🌟 I. Cosmic Identity — Who You Are
-Name ${formData.name}'s cosmic archetype. Describe what makes their chart unique using Lagna lord, Moon sign, and Nakshatra deity. (120+ words, personal and specific)
+Name ${formData.name}'s cosmic archetype. Describe what makes their chart unique using Lagna lord, Moon sign, and Nakshatra deity. (120+ words)
 
 ## 🔮 II. Core Personality & Soul Blueprint
-Cover: fundamental nature from Lagna, emotional world from Moon and Nakshatra, hidden strengths, shadow traits, how others perceive them, karmic purpose. (120+ words)
+Cover: fundamental nature from Lagna, emotional world from Moon and Nakshatra, hidden strengths, shadow traits, karmic purpose. (120+ words)
 
 ## 💪 III. Health & Vitality Forecast
-Cover: Ayurvedic constitution from Lagna, vulnerable body parts from 6th house, health risks by decade (20s, 30s, 40s, 50s), diet recommendations, one remedy. End with a blockquote > of the most critical health warning. (120+ words)
+Cover: Ayurvedic constitution, vulnerable body parts, health risks by decade (20s 30s 40s 50s), diet recommendations, one remedy. End with blockquote of critical health warning. (120+ words)
 
 ## 💰 IV. Wealth, Finance & Prosperity
-Cover: Dhana Yogas by name if present, nature of wealth (inherited/self-made/business/service), peak earning years based on Dasha, investment style, specific years in next decade for major financial moves. End with a blockquote > of the single most important wealth insight. (120+ words)
+Cover: Dhana Yogas by name, nature of wealth, peak earning years, investment style, specific years for major moves. End with blockquote of key wealth insight. (120+ words)
 
 ## 💼 V. Career, Profession & Life Purpose
-Cover: most suitable career fields from 10th house, job vs business suitability, professional strengths, career challenges, expected milestones, any Rajyogas by name. End with a blockquote > of their greatest career strength. (120+ words)
+Cover: suitable career fields, job vs business suitability, professional strengths, career milestones, any Rajyogas. End with blockquote of greatest career strength. (120+ words)
 
 ## 📚 VI. Education & Intellectual Abilities
-Cover: academic strengths from Mercury and Jupiter, fields to excel in, higher education and overseas prospects, learning style, challenges and solutions. (120+ words)
+Cover: academic strengths, fields to excel in, higher education prospects, learning style, challenges. (120+ words)
 
 ## 💑 VII. Love, Marriage & Relationships
-Cover: marriage timing from 7th house and Venus, ideal partner qualities from 7th house sign and lord, love vs arranged marriage indication, Mangal Dosha assessment, compatibility factors, expected marriage timing window. End with a blockquote > of the most important relationship insight. (120+ words)
+Cover: marriage timing from 7th house, ideal partner qualities, love vs arranged marriage, Mangal Dosha assessment, compatibility, timing window. End with blockquote of key relationship insight. (120+ words)
 
 ## 👨‍👩‍👧 VIII. Family, Children & Home Life
-Cover: relationship with parents from 4th house, children timing and number from 5th house, where they are likely to settle, family karma and responsibilities. (120+ words)
+Cover: relationship with parents from 4th house, children timing from 5th house, where likely to settle, family karma. (120+ words)
 
 ## 🕉️ IX. Spiritual Path & Karma
-Cover: spiritual inclination from 12th house and Ketu, past life karma they are resolving, dharmic path and life purpose, beneficial spiritual practices for their chart, relationship with the divine. (120+ words)
+Cover: spiritual inclination, past life karma, dharmic path, beneficial practices, relationship with divine. (120+ words)
 
 ## ⏰ X. Current Dasha Analysis — Your Life Right Now
-Cover: what the Mahadasha lord means for ${formData.name}'s life themes, how the Antardasha is flavoring the current period, what they are psychologically experiencing, specific opportunities opening, specific challenges present, when the next Dasha begins. End with a blockquote > of the defining theme of this life chapter. (120+ words)
+Cover: Mahadasha lord themes, Antardasha flavoring, psychological experience, opportunities, challenges, when next Dasha begins. End with blockquote of defining theme. (120+ words)
 
 ## 📅 XI. 12-Month Forecast — Month by Month
-Write exactly one line per month for the next 12 months starting from June 2026. Format strictly as:
-**June 2026:** [dominant energy — key opportunity or challenge — recommended action]
-**July 2026:** [dominant energy — key opportunity or challenge — recommended action]
-[Continue for all 12 months through May 2027]
+Write one line per month starting June 2026 through May 2027. Format: **Month Year:** [energy — opportunity — action]
 
 ## 🍀 XII. Lucky Elements & Power Enhancers
-- **Lucky Colors:** [2-3 colors with one-sentence explanation]
-- **Lucky Numbers:** [2-3 numbers with explanation]
-- **Lucky Days:** [2-3 days of the week with explanation]
-- **Power Direction:** [one direction with explanation]
-- **Favorable Gemstone:** [specific gemstone name, which finger, which metal, weight in carats]
-- **Best Time of Day:** [for making important decisions]
+- **Lucky Colors:** [2-3 colors with explanation]
+- **Lucky Numbers:** [with explanation]
+- **Lucky Days:** [with explanation]
+- **Power Direction:** [direction with explanation]
+- **Favorable Gemstone:** [stone, finger, metal, carats]
+- **Best Time of Day:** [for decisions]
 
 ## 🙏 XIII. Remedies & Recommendations
-- **Mantra:** [exact mantra, how many times daily, best time to chant]
-- **Fasting:** [which day of the week, what to eat/avoid, why]
-- **Charity:** [what to donate, to whom, on which day, why]
-- **Color Therapy:** [colors for specific days of the week]
-- **Deity Worship:** [which deity, why, simple daily practice]
-- **One Life-Changing Habit:** [the single most powerful daily habit for ${formData.name}]
+- **Mantra:** [exact mantra, times daily, best time]
+- **Fasting:** [day, what to avoid, why]
+- **Charity:** [what to give, to whom, when, why]
+- **Color Therapy:** [colors for specific days]
+- **Deity Worship:** [deity, why, daily practice]
+- **One Life-Changing Habit:** [single most powerful change]
 
-CLOSE WITH: End the entire reading with a warm 3-sentence paragraph addressing ${formData.name} by name.
+End with a warm 3-sentence closing addressing ${formData.name} by name.
 
-DO NOT ADD ANY INTRODUCTION OR PREAMBLE BEFORE SECTION I.`
+DO NOT ADD INTRODUCTION OR PREAMBLE BEFORE SECTION I.`;
 
-  const claudeKey = process.env.CLAUDE_KEY
+    const claudeKey = process.env.CLAUDE_KEY;
+    const url = 'https://api.anthropic.com/v1/messages';
 
-  try {
-
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': claudeKey,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 4000,
-        system: systemPrompt,
-        messages: [
-          { role: 'user', content: userMessage }
-        ]
-      })
-    })
-
-    const data = await response.json()
-
-    if (!response.ok) {
-      console.error('Claude API error:', data)
-      throw new Error(data.error?.message || 'Claude API request failed')
+    if (!claudeKey) {
+      console.error('Server Configuration Missing: CLAUDE_KEY env variable is empty.');
+      throw new Error('Server credentials are missing.');
     }
 
-    const reading = data.content[0].text
+  const response = await fetch(url, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'x-api-key': claudeKey,
+    'anthropic-version': '2023-06-01'
+  },
+  body: JSON.stringify({
+    model: 'claude-haiku-4-5-20251001',
+    max_tokens: 4000,
+    system: systemPrompt,
+    messages: [
+      { role: 'user', content: userMessage }
+    ]
+  })
+});
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error('Claude API internal structural failure:', data);
+      throw new Error(data.error?.message || 'Claude API request failed');
+    }
+
+    const reading = data.content[0].text;
 
     return new Response(
       JSON.stringify({ reading }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      }
-    )
+      { status: 200, headers: responseHeaders }
+    );
 
   } catch (error) {
-    console.error('Server error:', error.message)
+    console.error('Production Server Error Caught:', error.message);
     return new Response(
-      JSON.stringify({ error: 'Failed to generate reading. Please try again.' }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' }
-      }
-    )
+      JSON.stringify({ error: error.message || 'Failed to generate reading' }),
+      { status: 500, headers: responseHeaders }
+    );
   }
+}
+
+// Handles serverless runtime preflight OPTIONS hits safely
+export async function OPTIONS() {
+  return new Response(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type'
+    }
+  });
 }
